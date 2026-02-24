@@ -41,7 +41,8 @@
         let data;
         try { data = JSON.parse(text); } catch { data = null; }
         if (!res.ok) {
-            throw new Error((data && data.error) || 'Error al publicar');
+            const msg = data ? (data.detail || data.error || 'Error al publicar') : 'Error al publicar';
+            throw new Error(msg);
         }
         return data;
     }

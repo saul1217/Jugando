@@ -8,15 +8,15 @@ function genId() {
 }
 
 module.exports = async function handler(req, res) {
-    const sql = getSQL();
-
-    if (req.method !== 'POST') {
-        res.setHeader('Allow', 'POST');
-        return res.status(405).json({ error: 'Método no permitido' });
-    }
-
     try {
-        const { post_id, content } = req.body;
+        const sql = getSQL();
+
+        if (req.method !== 'POST') {
+            res.setHeader('Allow', 'POST');
+            return res.status(405).json({ error: 'Método no permitido' });
+        }
+
+        const { post_id, content } = req.body || {};
 
         if (!post_id) {
             return res.status(400).json({ error: 'Se requiere post_id' });
@@ -40,18 +40,22 @@ module.exports = async function handler(req, res) {
         const trimmed = content.trim();
 
         await sql`
-      INSERT INTO comments (id, post_id, content)
-      VALUES (${id}, ${post_id}, ${trimmed})
-    `;
+            INSERT INTO comments (id, post_id, content)
+            VALUES (${id}, ${post_id}, ${trimmed})
+        `;
 
         const [comment] = await sql`
-      SELECT id, post_id, content, created_at
-      FROM comments WHERE id = ${id}
-    `;
+            SELECT id, post_id, content, created_at
+            FROM comments WHERE id = ${id}
+        `;
 
         return res.status(201).json(comment);
+
     } catch (err) {
-        console.error('POST /api/comments error:', err);
-        return res.status(500).json({ error: 'Error al crear comentario' });
+        console.error('API /api/comments error:', err);
+        return res.status(500).json({
+            error: 'Error del servidor',
+            detail: err.message
+        });
     }
 };
