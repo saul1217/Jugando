@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>41 mecos — Foro Anónimo</title>
+  <meta name="description" content="Foro anónimo para estudiantes. Publica, comenta y desahógate sin registro.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- ==================== HEADER FIJO ==================== -->
+  <header class="header" id="header">
+    <div class="header__inner">
+      <h1 class="header__logo">
+        <span class="header__logo-number">41</span>
+        <span class="header__logo-text">mecos</span>
+      </h1>
+      <p class="header__tagline">foro anónimo · sin filtros · sin registro</p>
+    </div>
+  </header>
+
+  <!-- ==================== CONTENIDO ==================== -->
+  <main class="main">
+
+    <!-- Formulario de nueva publicación -->
+    <section class="composer" id="composer">
+      <div class="composer__avatar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      </div>
+      <form class="composer__form" id="postForm">
+        <textarea
+          class="composer__textarea"
+          id="postText"
+          placeholder="¿Qué quieres contar? Suéltalo aquí..."
+          maxlength="1000"
+          rows="3"
+        ></textarea>
+        <div class="composer__footer">
+          <span class="composer__charcount" id="charCount">0 / 1000</span>
+          <button type="submit" class="composer__btn" id="postBtn">
+            <svg class="composer__btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            Publicar
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <!-- Feed de publicaciones -->
+    <section class="feed" id="feed">
+      <!-- Las publicaciones se renderizan aquí dinámicamente -->
+    </section>
+
+    <!-- Estado vacío -->
+    <div class="empty-state" id="emptyState">
+      <div class="empty-state__icon">🫠</div>
+      <p class="empty-state__text">Aún no hay publicaciones.<br>¡Sé el primero en decir algo!</p>
+    </div>
+
+  </main>
+
+  <!-- Toast de notificación -->
+  <div class="toast" id="toast"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
