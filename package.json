@@ -4,6 +4,7 @@
   "private": true,
   "description": "Foro anónimo para estudiantes — Vercel + Neon",
   "dependencies": {
-    "@neondatabase/serverless": "^0.10.4"
+    "@neondatabase/serverless": "^0.10.4",
+    "dotenv": "^17.3.1"
   }
 }
