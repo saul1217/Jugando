@@ -1,0 +1,9 @@
+{
+  "name": "41mecos",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Foro anónimo para estudiantes — Vercel + Neon",
+  "dependencies": {
+    "@neondatabase/serverless": "^0.10.4"
+  }
+}
