@@ -37,11 +37,13 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ content })
         });
+        const text = await res.text();
+        let data;
+        try { data = JSON.parse(text); } catch { data = null; }
         if (!res.ok) {
-            const data = await res.json();
-            throw new Error(data.error || 'Error al publicar');
+            throw new Error((data && data.error) || 'Error al publicar');
         }
-        return await res.json();
+        return data;
     }
 
     async function createComment(postId, content) {
@@ -50,11 +52,13 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ post_id: postId, content })
         });
+        const text = await res.text();
+        let data;
+        try { data = JSON.parse(text); } catch { data = null; }
         if (!res.ok) {
-            const data = await res.json();
-            throw new Error(data.error || 'Error al comentar');
+            throw new Error((data && data.error) || 'Error al comentar');
         }
-        return await res.json();
+        return data;
     }
 
     // ───────── Utilities ─────────
