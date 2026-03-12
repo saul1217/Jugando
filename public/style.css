@@ -343,6 +343,41 @@ body {
 }
 
 /* =========================================================
+   NEW POSTS BANNER
+   ========================================================= */
+.new-posts-banner {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4em;
+  width: 100%;
+  padding: 0.7em 1.2em;
+  margin-bottom: var(--space-md);
+  background: rgba(0, 240, 255, 0.08);
+  border: 1px solid rgba(0, 240, 255, 0.3);
+  border-radius: 100px;
+  color: var(--accent);
+  font-family: var(--font);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition);
+  animation: fadeSlideIn 0.35s ease;
+  letter-spacing: 0.02em;
+}
+
+.new-posts-banner:hover {
+  background: rgba(0, 240, 255, 0.15);
+  border-color: var(--accent);
+  box-shadow: 0 0 20px var(--accent-glow);
+  transform: translateY(-1px);
+}
+
+.new-posts-banner:active {
+  transform: scale(0.98);
+}
+
+/* =========================================================
    COMPOSER — New Post Form
    ========================================================= */
 .composer {

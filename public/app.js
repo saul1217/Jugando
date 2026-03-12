@@ -14,6 +14,7 @@
     const feed = document.getElementById('feed');
     const emptyState = document.getElementById('emptyState');
     const toast = document.getElementById('toast');
+    const newPostsBanner = document.getElementById('newPostsBanner');
 
     // Modal
     const nameModal = document.getElementById('nameModal');
@@ -34,6 +35,7 @@
     const MAX_CHARS = 1000;
     let currentUserName = null;
     let selectedImageBase64 = null;
+    let knownPostCount = 0;
 
     // ───────── Identity (localStorage token) ─────────
 
@@ -444,7 +446,22 @@
 
     async function refreshFeed() {
         const posts = await loadPosts();
+        knownPostCount = posts.length;
+        newPostsBanner.style.display = 'none';
         renderPosts(posts);
+    }
+
+    async function checkForNewPosts() {
+        try {
+            const res = await fetch('/api/posts');
+            if (!res.ok) return;
+            const posts = await res.json();
+            if (posts.length > knownPostCount && knownPostCount > 0) {
+                newPostsBanner.style.display = 'flex';
+            }
+        } catch (err) {
+            // silently ignore
+        }
     }
 
     // ───────── Character Counter ─────────
@@ -489,7 +506,14 @@
     updateCharCount();
     loadUserName().then(() => refreshFeed());
 
-    setInterval(refreshFeed, 30000);
+    // Check for new posts every 30s (don't auto-reload)
+    setInterval(checkForNewPosts, 30000);
+
+    newPostsBanner.addEventListener('click', () => {
+        newPostsBanner.style.display = 'none';
+        refreshFeed();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
 
     // ───────── Public API (for inline event handlers) ─────────
     window.app = {
