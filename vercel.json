@@ -1,4 +1,9 @@
 {
+    "functions": {
+        "api/posts.js": {
+            "maxDuration": 10
+        }
+    },
     "headers": [
         {
             "source": "/api/(.*)",

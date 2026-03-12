@@ -33,7 +33,7 @@
 
     const MAX_CHARS = 1000;
     let currentUserName = null;
-    let selectedImageFile = null;
+    let selectedImageBase64 = null;
 
     // ───────── Identity (localStorage token) ─────────
 
@@ -69,7 +69,6 @@
         nameModal.classList.add('modal-overlay--visible');
         nameError.textContent = '';
         nameInput.value = currentUserName || '';
-        // Hide close button on first time (must choose a name)
         modalClose.style.display = isFirstTime ? 'none' : 'flex';
         setTimeout(() => nameInput.focus(), 200);
     }
@@ -127,9 +126,43 @@
         }
     }
 
-    // ───────── Image Upload ─────────
+    // ───────── Image Handling (client-side compress → base64) ─────────
 
-    function handleImageSelect(e) {
+    function compressImage(file, maxWidth, quality) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const img = new Image();
+                img.onload = function () {
+                    const canvas = document.createElement('canvas');
+                    let w = img.width;
+                    let h = img.height;
+
+                    // Resize if wider than maxWidth
+                    if (w > maxWidth) {
+                        h = Math.round((h * maxWidth) / w);
+                        w = maxWidth;
+                    }
+
+                    canvas.width = w;
+                    canvas.height = h;
+
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, w, h);
+
+                    // Compress to JPEG
+                    const dataUrl = canvas.toDataURL('image/jpeg', quality);
+                    resolve(dataUrl);
+                };
+                img.onerror = reject;
+                img.src = e.target.result;
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+    }
+
+    async function handleImageSelect(e) {
         const file = e.target.files[0];
         if (!file) return;
 
@@ -139,44 +172,32 @@
             return;
         }
 
-        if (file.size > 5 * 1024 * 1024) {
-            showToast('❌ La imagen no puede pesar más de 5MB');
+        if (file.size > 10 * 1024 * 1024) {
+            showToast('❌ La imagen es demasiado grande (máx 10MB)');
             imageInput.value = '';
             return;
         }
 
-        selectedImageFile = file;
+        try {
+            showToast('🔄 Comprimiendo imagen...');
+            // Compress: max 800px wide, 70% JPEG quality
+            const base64 = await compressImage(file, 800, 0.7);
+            selectedImageBase64 = base64;
 
-        // Show preview
-        const reader = new FileReader();
-        reader.onload = function (ev) {
-            previewImg.src = ev.target.result;
+            // Show preview
+            previewImg.src = base64;
             imagePreview.style.display = 'flex';
-        };
-        reader.readAsDataURL(file);
+        } catch (err) {
+            showToast('❌ Error al procesar imagen');
+            console.error(err);
+        }
     }
 
     function removeImage() {
-        selectedImageFile = null;
+        selectedImageBase64 = null;
         imageInput.value = '';
         previewImg.src = '';
         imagePreview.style.display = 'none';
-    }
-
-    async function uploadImage(file) {
-        const res = await fetch('/api/upload', {
-            method: 'POST',
-            headers: { 'Content-Type': file.type },
-            body: file
-        });
-
-        if (!res.ok) {
-            const data = await res.json().catch(() => null);
-            throw new Error((data && data.error) || 'Error al subir imagen');
-        }
-
-        const data = await res.json();
-        return data.url;
     }
 
     // ───────── Data Layer (Fetch API → Neon) ─────────
@@ -193,9 +214,9 @@
         }
     }
 
-    async function createPost(content, imageUrl) {
+    async function createPost(content, imageBase64) {
         const body = { content, author_name: currentUserName };
-        if (imageUrl) body.image_url = imageUrl;
+        if (imageBase64) body.image_url = imageBase64;
 
         const res = await fetch('/api/posts', {
             method: 'POST',
@@ -263,7 +284,6 @@
     // ───────── Render ─────────
 
     function renderPosts(posts) {
-        // Empty state
         if (posts.length === 0) {
             feed.innerHTML = '';
             emptyState.classList.add('empty-state--visible');
@@ -289,7 +309,7 @@
 
             const imageHtml = post.image_url
                 ? `<div class="post__image-container">
-                     <img class="post__image" src="${escapeHtml(post.image_url)}" alt="Imagen de la publicación" loading="lazy" onclick="app.openImage('${escapeHtml(post.image_url)}')">
+                     <img class="post__image" src="${post.image_url}" alt="Imagen" loading="lazy" onclick="app.openImage(this.src)">
                    </div>`
                 : '';
 
@@ -342,25 +362,15 @@
         const text = postText.value.trim();
         if (!text) return;
 
-        // Must have a name set
         if (!currentUserName) {
             showNameModal(true);
             return;
         }
 
         postBtn.disabled = true;
-        postBtn.querySelector('.composer__btn-text') ?.textContent || (postBtn.textContent = '');
 
         try {
-            let imageUrl = null;
-
-            // Upload image first if selected
-            if (selectedImageFile) {
-                showToast('📤 Subiendo imagen...');
-                imageUrl = await uploadImage(selectedImageFile);
-            }
-
-            await createPost(text, imageUrl);
+            await createPost(text, selectedImageBase64);
             postText.value = '';
             postText.style.height = 'auto';
             removeImage();
@@ -404,7 +414,6 @@
             showToast('💬 Comentario agregado');
             await refreshFeed();
 
-            // Re-open the comments section
             const section = document.getElementById(`comments-${postId}`);
             if (section) section.classList.add('comments--open');
         } catch (err) {
@@ -425,8 +434,12 @@
         }
     }
 
-    function openImage(url) {
-        window.open(url, '_blank');
+    function openImage(src) {
+        // Open base64 image in a new window
+        const win = window.open('');
+        if (win) {
+            win.document.write(`<html><head><title>Imagen</title><style>body{margin:0;background:#0d0d12;display:flex;align-items:center;justify-content:center;min-height:100vh;}img{max-width:100%;max-height:100vh;}</style></head><body><img src="${src}"></body></html>`);
+        }
     }
 
     async function refreshFeed() {
@@ -453,17 +466,14 @@
     postForm.addEventListener('submit', addPost);
     postText.addEventListener('input', updateCharCount);
 
-    // Auto-resize textarea
     postText.addEventListener('input', function () {
         this.style.height = 'auto';
         this.style.height = Math.min(this.scrollHeight, 200) + 'px';
     });
 
-    // Image
     imageInput.addEventListener('change', handleImageSelect);
     removeImageBtn.addEventListener('click', removeImage);
 
-    // Username modal
     userBtn.addEventListener('click', () => showNameModal(false));
     nameForm.addEventListener('submit', saveName);
     modalClose.addEventListener('click', hideNameModal);
@@ -471,7 +481,6 @@
         if (e.target === nameModal && currentUserName) hideNameModal();
     });
 
-    // Prevent spaces in name input
     nameInput.addEventListener('input', () => {
         nameInput.value = nameInput.value.replace(/\s/g, '');
     });
@@ -480,7 +489,6 @@
     updateCharCount();
     loadUserName().then(() => refreshFeed());
 
-    // Refresh feed every 30s
     setInterval(refreshFeed, 30000);
 
     // ───────── Public API (for inline event handlers) ─────────

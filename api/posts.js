@@ -47,10 +47,15 @@ module.exports = async function handler(req, res) {
                 return res.status(400).json({ error: 'Máximo 1000 caracteres' });
             }
 
+            // Validar tamaño del base64 (aprox 2MB max en texto)
+            if (image_url && image_url.length > 2 * 1024 * 1024) {
+                return res.status(400).json({ error: 'La imagen es demasiado grande' });
+            }
+
             const id = genId();
             const trimmed = content.trim();
             const authorName = author_name ? author_name.trim() : null;
-            const imgUrl = image_url ? image_url.trim() : null;
+            const imgUrl = image_url || null;
 
             await sql`
                 INSERT INTO posts (id, content, author_name, image_url)
