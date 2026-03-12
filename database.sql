@@ -4,11 +4,25 @@
 -- ==========================================================
 
 -- ==========================================================
+-- TABLA: usernames
+-- ==========================================================
+CREATE TABLE IF NOT EXISTS usernames (
+    token       TEXT PRIMARY KEY,
+    name        TEXT UNIQUE NOT NULL,
+    created_at  TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_usernames_name ON usernames(name);
+
+
+-- ==========================================================
 -- TABLA: posts
 -- ==========================================================
 CREATE TABLE IF NOT EXISTS posts (
     id          TEXT PRIMARY KEY,
     content     TEXT NOT NULL,
+    author_name TEXT,
+    image_url   TEXT,
     created_at  TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -22,6 +36,7 @@ CREATE TABLE IF NOT EXISTS comments (
     id          TEXT PRIMARY KEY,
     post_id     TEXT NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
     content     TEXT NOT NULL,
+    author_name TEXT,
     created_at  TIMESTAMPTZ DEFAULT NOW()
 );
 

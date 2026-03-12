@@ -1,6 +1,6 @@
 // ───────── API: /api/posts ─────────
 // GET  → Obtener todas las publicaciones con comentarios
-// POST → Crear nueva publicación anónima
+// POST → Crear nueva publicación
 const { getSQL } = require('../db');
 const crypto = require('crypto');
 
@@ -15,7 +15,7 @@ module.exports = async function handler(req, res) {
         // ──── GET /api/posts ────
         if (req.method === 'GET') {
             const posts = await sql`
-                SELECT id, content, created_at
+                SELECT id, content, author_name, image_url, created_at
                 FROM posts
                 ORDER BY created_at DESC
             `;
@@ -24,7 +24,7 @@ module.exports = async function handler(req, res) {
             const result = [];
             for (const post of posts) {
                 const comments = await sql`
-                    SELECT id, content, created_at
+                    SELECT id, content, author_name, created_at
                     FROM comments
                     WHERE post_id = ${post.id}
                     ORDER BY created_at ASC
@@ -37,7 +37,7 @@ module.exports = async function handler(req, res) {
 
         // ──── POST /api/posts ────
         if (req.method === 'POST') {
-            const { content } = req.body || {};
+            const { content, author_name, image_url } = req.body || {};
 
             if (!content || !content.trim()) {
                 return res.status(400).json({ error: 'El contenido no puede estar vacío' });
@@ -49,14 +49,16 @@ module.exports = async function handler(req, res) {
 
             const id = genId();
             const trimmed = content.trim();
+            const authorName = author_name ? author_name.trim() : null;
+            const imgUrl = image_url ? image_url.trim() : null;
 
             await sql`
-                INSERT INTO posts (id, content)
-                VALUES (${id}, ${trimmed})
+                INSERT INTO posts (id, content, author_name, image_url)
+                VALUES (${id}, ${trimmed}, ${authorName}, ${imgUrl})
             `;
 
             const [post] = await sql`
-                SELECT id, content, created_at
+                SELECT id, content, author_name, image_url, created_at
                 FROM posts WHERE id = ${id}
             `;
 

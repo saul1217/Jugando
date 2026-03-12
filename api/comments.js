@@ -16,7 +16,7 @@ module.exports = async function handler(req, res) {
             return res.status(405).json({ error: 'Método no permitido' });
         }
 
-        const { post_id, content } = req.body || {};
+        const { post_id, content, author_name } = req.body || {};
 
         if (!post_id) {
             return res.status(400).json({ error: 'Se requiere post_id' });
@@ -38,14 +38,15 @@ module.exports = async function handler(req, res) {
 
         const id = genId();
         const trimmed = content.trim();
+        const authorName = author_name ? author_name.trim() : null;
 
         await sql`
-            INSERT INTO comments (id, post_id, content)
-            VALUES (${id}, ${post_id}, ${trimmed})
+            INSERT INTO comments (id, post_id, content, author_name)
+            VALUES (${id}, ${post_id}, ${trimmed}, ${authorName})
         `;
 
         const [comment] = await sql`
-            SELECT id, post_id, content, created_at
+            SELECT id, post_id, content, author_name, created_at
             FROM comments WHERE id = ${id}
         `;
 
